@@ -2,8 +2,8 @@
 
 ## 一、基础知识
 
-1. MATLAB提供了图像处理工具箱，在命令窗口输入help images可查看该工具箱内的所有函数。请阅读并大致了解这些函数的基本功能。
-2. 利用MATLAB 提供的Image file I/O函数分别完成以下处理：
+1. MATLAB提供了图像处理工具箱，在命令窗口输入 `help images` 可查看该工具箱内的所有函数。请阅读并大致了解这些函数的基本功能。
+2. 利用MATLAB提供的 `Image file I/O` 函数分别完成以下处理：
     1. 以测试图像的中心为圆心，图像的长和宽中较小值的一半为半径画一个红颜色的圆；
     2. 将测试图像涂成国际象棋状的“黑白格”的样子，其中“黑”即黑色，“白”则意味着保留原图。
 
@@ -140,8 +140,8 @@ C1,C2
 > 可以发现两种方法得到的图像完全相同，即验证了上述结论。  
   
 **2. 请编程实现二维DCT，并和MATLAB自带的库函数dct2比较是否一致。** 
-
-> 实现二维DCT只需要实现二维DCT算子 $D$ ，之后直接代入公式  
+> 
+> 实现二维DCT只需要实现二维DCT算子，之后直接代入公式
 >
 >> $$ C_{M\times N}=D_{M\times M}A_{M\times N}D^T_{N\times N} $$
 > 
@@ -206,3 +206,57 @@ C2 = my_dct2(A)
 > 可见 $C1$ 与 $C2$ 完全相同，即验证了自行实现的二维DCT变换的正确性。
 
 **3. 如果将DCT系数矩阵中右侧四列的系数全部置零，逆变换后的图像会发生什么变化？选取一块图验证你的结论。如果左侧的四列置零呢？**
+
+> 首先仿照 `my_dct2` 函数的定义方法自定义 `my_idct2` 函数进行逆DCT变换
+
+```matlab
+function A = my_idct2(C)
+%MY_IDCT2 2-dimensional inverse DCT transform
+% This function returns the 2-dimensional inverse DCT transform of the 
+% input matrix C
+
+[m,n] = size(C);
+Dm = dct2_operator(m);
+Dn = dct2_operator(n);
+A = Dm'*C*Dn;
+
+end
+```
+
+> 选取hall_gray图片进行处理
+> 实现代码如下：
+
+```matlab
+%% m2_3.m
+
+clear;
+load data\hall.mat hall_gray;
+
+%% DCT2 and IDCT2 transform
+hall_gray_A = double(hall_gray)-128; % preprocessing
+hall_gray_C = my_dct2(hall_gray_A);
+% set right 4 columns zero
+hall_gray_C1 = hall_gray_C;
+hall_gray_C1(:,end-3:end) = 0;
+hall_gray1 = uint8(my_idct2(hall_gray_C1)+128);
+% set left 4 columns zero
+hall_gray_C2 = hall_gray_C;
+hall_gray_C2(:,1:4) = 0;
+hall_gray2 = uint8(my_idct2(hall_gray_C2)+128);
+
+%% plot and compare
+figure;
+subplot(1,3,1);
+imshow(hall_gray);
+title("Original");
+subplot(1,3,2);
+imshow(hall_gray1);
+title("Set right 4 cols zero");
+subplot(1,3,3);
+imshow(hall_gray2);
+title("Set left 4 cols zero");
+```
+
+> 输出如下：  
+> 可见，将右侧4列（高频分量）置零后，图像几乎无变化；将左侧4列（直流和低频分量）置零后，图像明显变暗。因此可以说明，人眼对图像中的低频分量比高频分量更敏感。另外，由于将直流分量也置为零，因此图像明显变暗（灰度数值整体减小）。
+
