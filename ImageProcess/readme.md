@@ -141,7 +141,7 @@ C1,C2
   
 **2. 请编程实现二维DCT，并和MATLAB自带的库函数dct2比较是否一致。** 
 > 
-> 实现二维DCT只需要实现二维DCT算子，之后直接代入公式
+> 实现二维DCT只需要实现二维DCT算子 $D$ ，之后直接代入公式
 >
 >> $$ C_{M\times N}=D_{M\times M}A_{M\times N}D^T_{N\times N} $$
 > 
@@ -201,9 +201,8 @@ C1 = dct2(A)
 C2 = my_dct2(A)
 ```
 
-> 输出结果如下：
-> 
-> 可见 $C1$ 与 $C2$ 完全相同，即验证了自行实现的二维DCT变换的正确性。
+> 输出结果如下：  
+> 可见 $C1$ 与 $C2$ 完全相同，即验证了自行实现的二维DCT变换的正确性。  
 
 **3. 如果将DCT系数矩阵中右侧四列的系数全部置零，逆变换后的图像会发生什么变化？选取一块图验证你的结论。如果左侧的四列置零呢？**
 
@@ -260,3 +259,51 @@ title("Set left 4 cols zero");
 > 输出如下：  
 > 可见，将右侧4列（高频分量）置零后，图像几乎无变化；将左侧4列（直流和低频分量）置零后，图像明显变暗。因此可以说明，人眼对图像中的低频分量比高频分量更敏感。另外，由于将直流分量也置为零，因此图像明显变暗（灰度数值整体减小）。
 
+** 4．若对DCT系数分别做转置、旋转90度和旋转180度操作 (rot90) ，逆变换后恢复的图像有何变化？选取一块图验证你的结论。** 
+
+> 选取hall_gray图片进行处理：
+
+```matlab
+%% m2_4.m
+
+clear;
+load data\hall.mat hall_gray;
+
+%% DCT2 and IDCT2 transform
+
+hall_gray_A = double(hall_gray)-128; % preprocessing
+hall_gray_C = my_dct2(hall_gray_A);
+
+hall_gray_CT = hall_gray_C';
+hall_gray_C90 = rot90(hall_gray_C);
+hall_gray_C180 = rot90(hall_gray_C90);
+
+hall_gray_T = uint8(my_idct2(hall_gray_CT)+128);
+hall_gray_90 = uint8(my_idct2(hall_gray_C90)+128);
+hall_gray_180 = uint8(my_idct2(hall_gray_C180)+128);
+
+%% plot
+figure;
+subplot(2,2,1);
+imshow(hall_gray);
+title("Original");
+subplot(2,2,2);
+imshow(hall_gray_T);
+title("Transpose");
+subplot(2,2,3);
+imshow(hall_gray_90);
+title("Rotate 90");
+subplot(2,2,4);
+imshow(hall_gray_180);
+title("Rotate 180");
+```
+
+> 输出如下：  
+> 可见，DCT系数矩阵转置后图片仅仅是旋转了90°；DCT系数矩阵旋转90°后，图片不仅旋转了90°，还产生了许多黑白条纹，大礼堂的形状变得模糊；DCT系数矩阵旋转180°后，图片并没有旋转，但产生了大量黑白点，形状变得特别模糊。
+
+** 5．如果认为差分编码是一个系统，请绘出这个系统的频率响应，说明它是一个*高通* (低通、高通、带通、带阻) 滤波器。DC系数先进行差分编码再进行熵编码，说明DC系数的 *高通* 频率分量更多。** 
+
+> 差分编码的表达式为 $ y(n)=x(n-1)-x(n) $
+> 传递函数为
+> $$ H(s)=-\frac{1}{1-s^-1} $$
+> 
